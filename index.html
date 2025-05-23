@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calcolatore Royalties (Input Limitati v5)</title>
+    <title>Calcolatore Royalties (Percentuali Variabili v6)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -103,6 +103,20 @@
                         <input type="number" id="inputNetRevenueAMZ" value="115.00" step="0.01" class="w-full p-3 pl-8 rounded-lg input-field text-white" required>
                     </div>
                 </div>
+                 <div>
+                    <label for="inputRoyaltyRateStandard" class="block text-sm font-medium input-label mb-1">Percentuale Royalty Prodotti Standard (%)</label>
+                    <div class="relative">
+                        <input type="number" id="inputRoyaltyRateStandard" value="2.0" step="0.1" class="w-full p-3 pl-8 rounded-lg input-field text-white" required>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">%</div>
+                    </div>
+                </div>
+                <div>
+                    <label for="inputRoyaltyRateSpecial" class="block text-sm font-medium input-label mb-1">Percentuale Royalty Codici Speciali (%)</label>
+                    <div class="relative">
+                         <input type="number" id="inputRoyaltyRateSpecial" value="10.0" step="0.1" class="w-full p-3 pl-8 rounded-lg input-field text-white" required>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">%</div>
+                    </div>
+                </div>
                 <div>
                     <label for="inputVatRate" class="block text-sm font-medium input-label mb-1">Aliquota IVA (Fissa)</label>
                     <input type="number" id="inputVatRate" value="0.22" step="0.01" class="w-full p-3 rounded-lg input-field text-white" readonly>
@@ -135,11 +149,11 @@
                 </div>
 
                 <div class="flex justify-between items-center p-2.5 result-item rounded-lg mt-3 pt-3 border-t border-slate-700">
-                    <span class="text-slate-300">Royalties su Prodotti Standard (2%):</span>
+                    <span id="labelRoyaltiesStandard" class="text-slate-300">Royalties su Prodotti Standard (2%):</span>
                     <span id="outputRoyaltiesStandard" class="font-semibold text-lg text-white result-value">€ 0,00</span>
                 </div>
                 <div class="flex justify-between items-center p-2.5 result-item rounded-lg">
-                    <span class="text-slate-300">Royalties su Codici Speciali (10%):</span>
+                    <span id="labelRoyaltiesSpecial" class="text-slate-300">Royalties su Codici Speciali (10%):</span>
                     <span id="outputRoyaltiesSpecialCodes" class="font-semibold text-lg text-white result-value">€ 0,00</span>
                 </div>
                 <div class="mt-4 pt-4 border-t-2 border-sky-500/50 flex justify-between items-center">
@@ -163,14 +177,14 @@
     <script>
         const formatCurrency = (value) => {
             const num = parseFloat(value);
-            if (isNaN(num) || !isFinite(num)) return "€ 0,00"; // Aggiunto controllo per !isFinite
+            if (isNaN(num) || !isFinite(num)) return "€ 0,00";
             return `€ ${num.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         };
 
         const getValue = (id) => {
             const element = document.getElementById(id);
             const val = parseFloat(element.value);
-            return isNaN(val) ? 0 : val; // Assicura che venga restituito 0 se non è un numero
+            return isNaN(val) ? 0 : val;
         }
 
         const performCalculations = () => {
@@ -179,37 +193,37 @@
             const netRevenueALX = getValue('inputNetRevenueALX');
             const netRevenueEB = getValue('inputNetRevenueEB');
             const netRevenueAMZ = getValue('inputNetRevenueAMZ');
-            const vatRate = getValue('inputVatRate'); // Questo è ora readonly, ma lo leggiamo comunque
+            const royaltyRateStandardPercent = getValue('inputRoyaltyRateStandard');
+            const royaltyRateSpecialPercent = getValue('inputRoyaltyRateSpecial');
+            const vatRate = getValue('inputVatRate');
 
             const totalNetSpecialCodes = netRevenueATD + netRevenueALX + netRevenueEB + netRevenueAMZ;
             const grossSpecialCodes = totalNetSpecialCodes * (1 + vatRate);
             
             let grossRevenueStandard = inputFatturatoLordoComplessivo - grossSpecialCodes;
-            if (grossRevenueStandard < 0) grossRevenueStandard = 0; // Evita valori negativi
+            if (grossRevenueStandard < 0) grossRevenueStandard = 0;
 
             let netRevenueStandard = grossRevenueStandard / (1 + vatRate);
-            if (netRevenueStandard < 0) netRevenueStandard = 0; // Evita valori negativi
+            if (netRevenueStandard < 0) netRevenueStandard = 0;
 
-            const royaltiesStandard = netRevenueStandard * 0.02;
-            const royaltiesSpecialCodes = totalNetSpecialCodes * 0.10;
+            const royaltiesStandard = netRevenueStandard * (royaltyRateStandardPercent / 100);
+            const royaltiesSpecialCodes = totalNetSpecialCodes * (royaltyRateSpecialPercent / 100);
             const totalRoyalties = royaltiesStandard + royaltiesSpecialCodes;
             
             const fatturatoNettoComplessivo = netRevenueStandard + totalNetSpecialCodes;
 
             return {
                 inputFatturatoLordoComplessivo,
-                netRevenueATD, // Per PDF
-                netRevenueALX, // Per PDF
-                netRevenueEB,  // Per PDF
-                netRevenueAMZ, // Per PDF
-                vatRate,       // Per PDF
+                netRevenueATD, netRevenueALX, netRevenueEB, netRevenueAMZ, // Per PDF
+                royaltyRateStandardPercent, royaltyRateSpecialPercent, // Per UI e PDF
+                vatRate, // Per PDF
                 totalNetSpecialCodes,
                 royaltiesStandard,
                 royaltiesSpecialCodes,
                 totalRoyalties,
                 fatturatoNettoComplessivo,
-                grossRevenueStandard, // Rinominato da outputFatturatoLordoStandard
-                netRevenueStandard    // Questo è il calcolato "Fatturato Netto Prodotti Standard"
+                grossRevenueStandard,
+                netRevenueStandard
             };
         };
 
@@ -218,10 +232,15 @@
                 document.getElementById('outputFatturatoLordoComplessivo').textContent = formatCurrency(results.inputFatturatoLordoComplessivo);
                 document.getElementById('outputFatturatoLordoStandard').textContent = formatCurrency(results.grossRevenueStandard);
                 document.getElementById('outputFatturatoNettoComplessivo').textContent = formatCurrency(results.fatturatoNettoComplessivo);
-                document.getElementById('outputNetRevenueStandard').textContent = formatCurrency(results.netRevenueStandard);
+                document.getElementById('outputNetRevenueStandard').textContent = formatCurrency(results.netRevenueStandard); // Questo è il calcolato
                 document.getElementById('outputTotalNetSpecialCodes').textContent = formatCurrency(results.totalNetSpecialCodes);
+                
+                document.getElementById('labelRoyaltiesStandard').textContent = `Royalties su Prodotti Standard (${results.royaltyRateStandardPercent.toLocaleString('it-IT', {minimumFractionDigits:1, maximumFractionDigits:1})}%):`;
                 document.getElementById('outputRoyaltiesStandard').textContent = formatCurrency(results.royaltiesStandard);
+                
+                document.getElementById('labelRoyaltiesSpecial').textContent = `Royalties su Codici Speciali (${results.royaltyRateSpecialPercent.toLocaleString('it-IT', {minimumFractionDigits:1, maximumFractionDigits:1})}%):`;
                 document.getElementById('outputRoyaltiesSpecialCodes').textContent = formatCurrency(results.royaltiesSpecialCodes);
+                
                 document.getElementById('outputTotalRoyalties').textContent = formatCurrency(results.totalRoyalties);
             } catch (e) {
                 console.error("Errore durante l'aggiornamento dell'interfaccia utente:", e);
@@ -236,7 +255,7 @@
         const exportPDF = () => {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const data = performCalculations(); // Ottieni i dati numerici freschi
+            const data = performCalculations();
 
             doc.setFontSize(18);
             doc.setTextColor(40, 107, 180);
@@ -260,6 +279,8 @@
                 ["Fatturato Netto Codice ALX (€):", formatCurrency(data.netRevenueALX)],
                 ["Fatturato Netto Codice EB (€):", formatCurrency(data.netRevenueEB)],
                 ["Fatturato Netto Codice AMZ (€):", formatCurrency(data.netRevenueAMZ)],
+                ["Percentuale Royalty Prodotti Standard (%):", `${data.royaltyRateStandardPercent.toLocaleString('it-IT', {minimumFractionDigits:1, maximumFractionDigits:1})}%`],
+                ["Percentuale Royalty Codici Speciali (%):", `${data.royaltyRateSpecialPercent.toLocaleString('it-IT', {minimumFractionDigits:1, maximumFractionDigits:1})}%`],
                 ["Aliquota IVA (Fissa):", `${(data.vatRate * 100).toFixed(0)}%`],
             ];
             doc.autoTable({ ...tableOptions, head: [['Voce di Input', 'Valore Inserito']], body: inputDataBody });
@@ -271,8 +292,8 @@
                 ["Fatturato Netto Prodotti Standard (€):", formatCurrency(data.netRevenueStandard)],
                 ["Fatturato Netto Codici Speciali (€):", formatCurrency(data.totalNetSpecialCodes)],
                 [{content: "--- Royalties Calcolate ---", colSpan: 2, styles: {halign: 'center', fontStyle: 'bold', fillColor: [230, 245, 241]}}],
-                ["Royalties su Prodotti Standard (2%):", formatCurrency(data.royaltiesStandard)],
-                ["Royalties su Codici Speciali (10%):", formatCurrency(data.royaltiesSpecialCodes)],
+                [`Royalties su Prodotti Standard (${data.royaltyRateStandardPercent.toLocaleString('it-IT', {minimumFractionDigits:1, maximumFractionDigits:1})}%):`, formatCurrency(data.royaltiesStandard)],
+                [`Royalties su Codici Speciali (${data.royaltyRateSpecialPercent.toLocaleString('it-IT', {minimumFractionDigits:1, maximumFractionDigits:1})}%):`, formatCurrency(data.royaltiesSpecialCodes)],
                 [{ content: "TOTALE ROYALTIES:", styles: { fontStyle: 'bold', fontSize: 10, textColor: [22,160,133]} },
                  { content: formatCurrency(data.totalRoyalties), styles: { fontStyle: 'bold', fontSize: 10, textColor: [22,160,133]} }],
             ];
@@ -286,7 +307,7 @@
             doc.save(`Riepilogo_Royalties_${new Date().toISOString().slice(0,10)}.pdf`);
         };
 
-        const formInputs = document.querySelectorAll('#royaltiesForm input[type="number"]:not([readonly])'); // Seleziona solo gli input numerici non readonly
+        const formInputs = document.querySelectorAll('#royaltiesForm input[type="number"]:not([readonly])');
         formInputs.forEach(input => {
             input.addEventListener('input', handleCalculationAndUpdateUI);
         });
