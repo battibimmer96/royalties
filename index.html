@@ -3,192 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Royalties</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.0.0/dist/chart.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Calcolatore Royalties (Input Limitati v5)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .result-value {
+            min-width: 110px;
+            text-align: right;
+        }
+        .input-label {
+            color: #cbd5e1; /* slate-300 */
+        }
+        .input-field {
+            background-color: #334155; /* slate-700 */
+            border-color: #475569; /* slate-600 */
+        }
+        .input-field:focus {
+            --tw-ring-color: #0ea5e9; /* sky-500 */
+            border-color: #0ea5e9; /* sky-500 */
+        }
+        .input-field[readonly] {
+            background-color: #475569; /* slate-600 */
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .section-title {
+            color: #38bdf8; /* sky-400 */
+        }
+        .results-section-title {
+             color: #2dd4bf; /* teal-400 */
+        }
+        .result-item {
+            background-color: rgba(51, 65, 85, 0.5); /* slate-700/50 */
+        }
+    </style>
 </head>
-<body>
-    <!-- Header -->
-    <header class="bg-primary text-white py-3">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="mb-0">Dashboard Royalties</h1>
-                    <div class="mt-2">
-                        <select id="monthSelector" class="form-select form-select-sm w-auto">
-                            <option value="01">Gennaio</option>
-                            <option value="02">Febbraio</option>
-                            <option value="03" selected>Marzo</option>
-                            <option value="04">Aprile</option>
-                            <option value="05">Maggio</option>
-                            <option value="06">Giugno</option>
-                            <option value="07">Luglio</option>
-                            <option value="08">Agosto</option>
-                            <option value="09">Settembre</option>
-                            <option value="10">Ottobre</option>
-                            <option value="11">Novembre</option>
-                            <option value="12">Dicembre</option>
-                        </select>
-                        <select id="yearSelector" class="form-select form-select-sm w-auto d-inline-block ms-2">
-                            <option value="2023">2023</option>
-                            <option value="2024">2024</option>
-                            <option value="2025" selected>2025</option>
-                            <option value="2026">2026</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <nav class="navbar navbar-expand navbar-dark">
-                        <ul class="navbar-nav ms-auto">
-                            <li class="nav-item"><a class="nav-link active" href="#dashboard">Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#tabella">Tabella</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#grafici">Grafici</a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </div>
-        </div>
+<body class="bg-gradient-to-br from-slate-900 to-slate-800 text-white min-h-screen p-4 sm:p-8 flex flex-col items-center">
+
+    <header class="w-full max-w-5xl mb-8 text-center">
+        <h1 class="text-4xl sm:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-cyan-300 to-teal-400 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 mr-3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25v-.008ZM11.25 8.25h.008v.008H11.25V8.25Zm0 2.25h.008v.008H11.25v-.008Zm0 2.25h.008v.008H11.25v-.008Zm0 2.25h.008v.008H11.25v-.008Zm2.25-6.75h.008v.008H13.5V8.25Zm0 2.25h.008v.008H13.5v-.008Zm0 2.25h.008v.008H13.5v-.008Zm0 2.25h.008v.008H13.5v-.008Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 0 1 3 19.875v-6.75ZM19.5 0c.621 0 1.125.504 1.125 1.125v4.5A1.125 1.125 0 0 1 19.5 6.75H4.5A1.125 1.125 0 0 1 3.375 5.625v-4.5C3.375.504 3.879 0 4.5 0h15Z" />
+            </svg>
+            Calcolatore Royalties
+        </h1>
+        <p class="text-slate-400 mt-2 text-lg">Inserisci i dati per calcolare le royalties. I risultati si aggiornano automaticamente.</p>
     </header>
 
-    <!-- Dashboard Section -->
-    <section id="dashboard" class="py-5">
-        <div class="container">
-            <h2 class="text-center mb-4">Dashboard Royalties</h2>
-            
-            <!-- Statistiche Chiave -->
-            <div class="row mb-5">
-                <div class="col-md-3 mb-3">
-                    <div class="card text-center h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Fatturato Totale</h5>
-                            <p class="card-text display-5 text-primary" id="totale">€0</p>
-                        </div>
+    <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section class="bg-slate-800 shadow-2xl rounded-xl p-6">
+            <h2 class="text-2xl font-semibold mb-6 section-title">Dati di Input</h2>
+            <form id="royaltiesForm" class="space-y-4">
+                <div>
+                    <label for="inputFatturatoLordoComplessivo" class="block text-sm font-medium input-label mb-1">Fatturato Lordo Complessivo (€)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">€</div>
+                        <input type="number" id="inputFatturatoLordoComplessivo" value="130000.00" step="0.01" class="w-full p-3 pl-8 rounded-lg input-field text-white transition-colors duration-150 ease-in-out" required>
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card text-center h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Media</h5>
-                            <p class="card-text display-5 text-success" id="media">€0</p>
-                        </div>
+                <div>
+                    <label for="inputNetRevenueATD" class="block text-sm font-medium input-label mb-1">Fatturato Netto Codice ATD (€)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">€</div>
+                        <input type="number" id="inputNetRevenueATD" value="115.00" step="0.01" class="w-full p-3 pl-8 rounded-lg input-field text-white" required>
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card text-center h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Massimo</h5>
-                            <p class="card-text display-5 text-success" id="massimo">€0</p>
-                        </div>
+                <div>
+                    <label for="inputNetRevenueALX" class="block text-sm font-medium input-label mb-1">Fatturato Netto Codice ALX (€)</label>
+                     <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">€</div>
+                        <input type="number" id="inputNetRevenueALX" value="239.00" step="0.01" class="w-full p-3 pl-8 rounded-lg input-field text-white" required>
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card text-center h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Minimo</h5>
-                            <p class="card-text display-5 text-danger" id="minimo">€0</p>
-                        </div>
+                <div>
+                    <label for="inputNetRevenueEB" class="block text-sm font-medium input-label mb-1">Fatturato Netto Codice EB (€)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">€</div>
+                        <input type="number" id="inputNetRevenueEB" value="1035.00" step="0.01" class="w-full p-3 pl-8 rounded-lg input-field text-white" required>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Grafico Principale -->
-            <div class="row">
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">Distribuzione Fatturato</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="pieChart" height="300"></canvas>
-                        </div>
+                <div>
+                    <label for="inputNetRevenueAMZ" class="block text-sm font-medium input-label mb-1">Fatturato Netto Codice AMZ (€)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">€</div>
+                        <input type="number" id="inputNetRevenueAMZ" value="115.00" step="0.01" class="w-full p-3 pl-8 rounded-lg input-field text-white" required>
                     </div>
                 </div>
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">Confronto Fatturato per Codice</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="barChart" height="300"></canvas>
-                        </div>
-                    </div>
+                <div>
+                    <label for="inputVatRate" class="block text-sm font-medium input-label mb-1">Aliquota IVA (Fissa)</label>
+                    <input type="number" id="inputVatRate" value="0.22" step="0.01" class="w-full p-3 rounded-lg input-field text-white" readonly>
                 </div>
-            </div>
-        </div>
-    </section>
+            </form>
+        </section>
 
-    <!-- Tabella Section -->
-    <section id="tabella" class="py-5 bg-light">
-        <div class="container">
-            <h2 class="text-center mb-4">Tabella Dettagliata</h2>
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="royaltiesTable" class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Descrizione</th>
-                                    <th>Valore (€)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- I dati verranno caricati dinamicamente -->
-                            </tbody>
-                        </table>
-                    </div>
+        <section class="bg-slate-800 shadow-2xl rounded-xl p-6">
+            <h2 class="text-2xl font-semibold mb-6 results-section-title">Risultati Calcolati</h2>
+            <div id="resultsContainer" class="space-y-2">
+                <div class="flex justify-between items-center p-2.5 result-item rounded-lg">
+                    <span class="text-slate-300">Fatturato Lordo Complessivo (€):</span>
+                    <span id="outputFatturatoLordoComplessivo" class="font-semibold text-lg text-white result-value">€ 0,00</span>
                 </div>
-            </div>
-        </div>
-    </section>
+                <div class="flex justify-between items-center p-2.5 result-item rounded-lg">
+                    <span class="text-slate-300">Fatturato Lordo Prodotti Standard (€):</span>
+                    <span id="outputFatturatoLordoStandard" class="font-semibold text-lg text-white result-value">€ 0,00</span>
+                </div>
+                 <div class="flex justify-between items-center p-2.5 result-item rounded-lg">
+                    <span class="text-slate-300">Fatturato Netto Complessivo (€):</span>
+                    <span id="outputFatturatoNettoComplessivo" class="font-semibold text-lg text-white result-value">€ 0,00</span>
+                </div>
+                <div class="flex justify-between items-center p-2.5 result-item rounded-lg">
+                    <span class="text-slate-300">Fatturato Netto Prodotti Standard (€):</span>
+                    <span id="outputNetRevenueStandard" class="font-semibold text-lg text-white result-value">€ 0,00</span>
+                </div>
+                <div class="flex justify-between items-center p-2.5 result-item rounded-lg">
+                    <span class="text-slate-300">Fatturato Netto Codici Speciali (€):</span>
+                    <span id="outputTotalNetSpecialCodes" class="font-semibold text-lg text-white result-value">€ 0,00</span>
+                </div>
 
-    <!-- Grafici Section -->
-    <section id="grafici" class="py-5">
-        <div class="container">
-            <h2 class="text-center mb-4">Visualizzazioni Grafiche</h2>
-            
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Analisi Dettagliata</h5>
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-outline-primary active" id="viewBar">Barre</button>
-                                <button type="button" class="btn btn-outline-primary" id="viewPie">Torta</button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="detailedChart" height="400"></canvas>
-                        </div>
-                    </div>
+                <div class="flex justify-between items-center p-2.5 result-item rounded-lg mt-3 pt-3 border-t border-slate-700">
+                    <span class="text-slate-300">Royalties su Prodotti Standard (2%):</span>
+                    <span id="outputRoyaltiesStandard" class="font-semibold text-lg text-white result-value">€ 0,00</span>
+                </div>
+                <div class="flex justify-between items-center p-2.5 result-item rounded-lg">
+                    <span class="text-slate-300">Royalties su Codici Speciali (10%):</span>
+                    <span id="outputRoyaltiesSpecialCodes" class="font-semibold text-lg text-white result-value">€ 0,00</span>
+                </div>
+                <div class="mt-4 pt-4 border-t-2 border-sky-500/50 flex justify-between items-center">
+                    <span class="text-xl font-bold text-sky-300">TOTALE ROYALTIES:</span>
+                    <span id="outputTotalRoyalties" class="text-2xl font-bold text-sky-300 bg-slate-700 px-3 py-1 rounded-md result-value">€ 0,00</span>
                 </div>
             </div>
-        </div>
-    </section>
+            <button id="exportPdfButton" class="mt-8 w-full bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Esporta Riepilogo PDF
+            </button>
+        </section>
+    </div>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0">© 2025 Royalties Dashboard</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <p class="mb-0">Ultimo aggiornamento: <span id="lastUpdate"></span></p>
-                </div>
-            </div>
-        </div>
+    <footer class="w-full max-w-5xl mt-12 text-center text-slate-500 text-sm">
+        <p>&copy; <span id="currentYear"></span> Calcolatore Royalties. Verifica sempre i calcoli per usi ufficiali.</p>
     </footer>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.0.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/interactive.js"></script>
-    <script src="js/period_selector.js"></script>
+    <script>
+        const formatCurrency = (value) => {
+            const num = parseFloat(value);
+            if (isNaN(num) || !isFinite(num)) return "€ 0,00"; // Aggiunto controllo per !isFinite
+            return `€ ${num.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        };
+
+        const getValue = (id) => {
+            const element = document.getElementById(id);
+            const val = parseFloat(element.value);
+            return isNaN(val) ? 0 : val; // Assicura che venga restituito 0 se non è un numero
+        }
+
+        const performCalculations = () => {
+            const inputFatturatoLordoComplessivo = getValue('inputFatturatoLordoComplessivo');
+            const netRevenueATD = getValue('inputNetRevenueATD');
+            const netRevenueALX = getValue('inputNetRevenueALX');
+            const netRevenueEB = getValue('inputNetRevenueEB');
+            const netRevenueAMZ = getValue('inputNetRevenueAMZ');
+            const vatRate = getValue('inputVatRate'); // Questo è ora readonly, ma lo leggiamo comunque
+
+            const totalNetSpecialCodes = netRevenueATD + netRevenueALX + netRevenueEB + netRevenueAMZ;
+            const grossSpecialCodes = totalNetSpecialCodes * (1 + vatRate);
+            
+            let grossRevenueStandard = inputFatturatoLordoComplessivo - grossSpecialCodes;
+            if (grossRevenueStandard < 0) grossRevenueStandard = 0; // Evita valori negativi
+
+            let netRevenueStandard = grossRevenueStandard / (1 + vatRate);
+            if (netRevenueStandard < 0) netRevenueStandard = 0; // Evita valori negativi
+
+            const royaltiesStandard = netRevenueStandard * 0.02;
+            const royaltiesSpecialCodes = totalNetSpecialCodes * 0.10;
+            const totalRoyalties = royaltiesStandard + royaltiesSpecialCodes;
+            
+            const fatturatoNettoComplessivo = netRevenueStandard + totalNetSpecialCodes;
+
+            return {
+                inputFatturatoLordoComplessivo,
+                netRevenueATD, // Per PDF
+                netRevenueALX, // Per PDF
+                netRevenueEB,  // Per PDF
+                netRevenueAMZ, // Per PDF
+                vatRate,       // Per PDF
+                totalNetSpecialCodes,
+                royaltiesStandard,
+                royaltiesSpecialCodes,
+                totalRoyalties,
+                fatturatoNettoComplessivo,
+                grossRevenueStandard, // Rinominato da outputFatturatoLordoStandard
+                netRevenueStandard    // Questo è il calcolato "Fatturato Netto Prodotti Standard"
+            };
+        };
+
+        const updateDOM = (results) => {
+            try {
+                document.getElementById('outputFatturatoLordoComplessivo').textContent = formatCurrency(results.inputFatturatoLordoComplessivo);
+                document.getElementById('outputFatturatoLordoStandard').textContent = formatCurrency(results.grossRevenueStandard);
+                document.getElementById('outputFatturatoNettoComplessivo').textContent = formatCurrency(results.fatturatoNettoComplessivo);
+                document.getElementById('outputNetRevenueStandard').textContent = formatCurrency(results.netRevenueStandard);
+                document.getElementById('outputTotalNetSpecialCodes').textContent = formatCurrency(results.totalNetSpecialCodes);
+                document.getElementById('outputRoyaltiesStandard').textContent = formatCurrency(results.royaltiesStandard);
+                document.getElementById('outputRoyaltiesSpecialCodes').textContent = formatCurrency(results.royaltiesSpecialCodes);
+                document.getElementById('outputTotalRoyalties').textContent = formatCurrency(results.totalRoyalties);
+            } catch (e) {
+                console.error("Errore durante l'aggiornamento dell'interfaccia utente:", e);
+            }
+        };
+        
+        const handleCalculationAndUpdateUI = () => {
+            const calculatedResults = performCalculations();
+            updateDOM(calculatedResults);
+        };
+        
+        const exportPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const data = performCalculations(); // Ottieni i dati numerici freschi
+
+            doc.setFontSize(18);
+            doc.setTextColor(40, 107, 180);
+            doc.text("Riepilogo Calcolo Royalties", 105, 20, null, null, "center");
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Data Esportazione: ${new Date().toLocaleDateString('it-IT')}`, 105, 28, null, null, "center");
+
+            const headStyles = { fillColor: [22, 160, 133], textColor: [255,255,255], fontStyle: 'bold' };
+            const tableOptions = {
+                theme: 'striped',
+                headStyles: headStyles,
+                styles: { fontSize: 9, cellPadding: 2.2 },
+                columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 45, halign: 'right' } },
+                margin: { top: 35 }
+            };
+
+            const inputDataBody = [
+                ["Fatturato Lordo Complessivo (€):", formatCurrency(data.inputFatturatoLordoComplessivo)],
+                ["Fatturato Netto Codice ATD (€):", formatCurrency(data.netRevenueATD)],
+                ["Fatturato Netto Codice ALX (€):", formatCurrency(data.netRevenueALX)],
+                ["Fatturato Netto Codice EB (€):", formatCurrency(data.netRevenueEB)],
+                ["Fatturato Netto Codice AMZ (€):", formatCurrency(data.netRevenueAMZ)],
+                ["Aliquota IVA (Fissa):", `${(data.vatRate * 100).toFixed(0)}%`],
+            ];
+            doc.autoTable({ ...tableOptions, head: [['Voce di Input', 'Valore Inserito']], body: inputDataBody });
+
+            let finalY = doc.lastAutoTable.finalY || 35;
+            const resultsDataBody = [
+                ["Fatturato Lordo Prodotti Standard (€):", formatCurrency(data.grossRevenueStandard)],
+                ["Fatturato Netto Complessivo (€):", formatCurrency(data.fatturatoNettoComplessivo)],
+                ["Fatturato Netto Prodotti Standard (€):", formatCurrency(data.netRevenueStandard)],
+                ["Fatturato Netto Codici Speciali (€):", formatCurrency(data.totalNetSpecialCodes)],
+                [{content: "--- Royalties Calcolate ---", colSpan: 2, styles: {halign: 'center', fontStyle: 'bold', fillColor: [230, 245, 241]}}],
+                ["Royalties su Prodotti Standard (2%):", formatCurrency(data.royaltiesStandard)],
+                ["Royalties su Codici Speciali (10%):", formatCurrency(data.royaltiesSpecialCodes)],
+                [{ content: "TOTALE ROYALTIES:", styles: { fontStyle: 'bold', fontSize: 10, textColor: [22,160,133]} },
+                 { content: formatCurrency(data.totalRoyalties), styles: { fontStyle: 'bold', fontSize: 10, textColor: [22,160,133]} }],
+            ];
+            doc.autoTable({ ...tableOptions, startY: finalY + 10, head: [['Voce Calcolata', 'Valore Risultante']], body: resultsDataBody });
+            
+            finalY = doc.lastAutoTable.finalY || 100;
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text("Documento generato automaticamente. Verificare i calcoli per usi ufficiali.", 105, finalY + 15, null, null, "center");
+
+            doc.save(`Riepilogo_Royalties_${new Date().toISOString().slice(0,10)}.pdf`);
+        };
+
+        const formInputs = document.querySelectorAll('#royaltiesForm input[type="number"]:not([readonly])'); // Seleziona solo gli input numerici non readonly
+        formInputs.forEach(input => {
+            input.addEventListener('input', handleCalculationAndUpdateUI);
+        });
+        document.getElementById('exportPdfButton').addEventListener('click', exportPDF);
+        
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        window.addEventListener('load', handleCalculationAndUpdateUI);
+    </script>
 </body>
 </html>
